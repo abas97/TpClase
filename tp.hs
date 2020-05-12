@@ -7,47 +7,63 @@ data Jugador = Jugador {  nombre :: String ,
 cantidadDeDinero :: Int ,
 tacticaDeJuego :: String,
 propiedadesCompradas :: [Propiedad],
-accionsARealizar :: [Acciones] } deriving (Show)
+accionsARealizar :: [Accion]
+ } deriving (Show)
 
 type Propiedad = (String,Int)
 
-type Acciones = Jugador -> Jugador 
+type Accion = Jugador -> Jugador 
 
 carolina :: Jugador
 carolina = Jugador "Carolina" 500  "accionista" [] [pasaPorElBanco , pagarAccionistas] 
  
+prueba :: Int->Int->Int
+prueba valor1 valor2= valor1 + valor2
+
 manuel :: Jugador
 manuel =  Jugador "Manuel" 500  "oferente singular" [] [ pasaPorElBanco, enojarse]
 
-pasaPorElBanco :: Acciones
-pasaPorElBanco jugador = jugador { cantidadDeDinero = cantidadDeDinero jugador + 40 , tacticaDeJuego="Comprador compulsivo"}
+modificarDinero :: Int->Accion
+modificarDinero cantidad jugador = jugador { cantidadDeDinero= cantidadDeDinero jugador + cantidad } 
 
-enojarse :: Acciones
-enojarse jugador = jugador{
-    cantidadDeDinero = cantidadDeDinero jugador + 50,
-    accionsARealizar  = accionsARealizar jugador ++ [gritar]
-}
+pasaPorElBanco :: Accion
+pasaPorElBanco jugador = modificarDinero 40 jugador { tacticaDeJuego="Comprador compulsivo"}
 
-gritar::Acciones
+enojarse :: Accion
+enojarse jugador = modificarDinero 50 jugador{accionsARealizar  = accionsARealizar jugador ++ [gritar]}
+
+gritar::Accion
 gritar jugador = jugador{ nombre = "AHHHH"++ nombre jugador}
 
-ganarSubasta :: Jugador -> Bool
-ganarSubasta jugador = (tacticaDeJuego jugador) == "oferente singular" || (tacticaDeJuego jugador)== "accionista"
+puedeGanarSubasta :: Jugador -> Bool
+puedeGanarSubasta jugador = (tacticaDeJuego jugador) == "oferente singular" || (tacticaDeJuego jugador)== "accionista"
 
-subastar :: Propiedad->Acciones
-subastar propiedad jugador |ganarSubasta jugador = jugador{ cantidadDeDinero =cantidadDeDinero jugador-snd propiedad, propiedadesCompradas = propiedadesCompradas jugador ++ [propiedad] }
+subastar :: Propiedad->Accion
+subastar propiedad jugador |puedeGanarSubasta jugador = modificarDinero (-precioPropiedad propiedad) jugador{ propiedadesCompradas = propiedadesCompradas jugador ++ [propiedad] }
                            |otherwise = jugador
 
 
-cobrarAlquileres :: Acciones
-cobrarAlquileres jugador = jugador { cantidadDeDinero = cantidadDeDinero jugador + (sum.(map esBarata).propiedadesCompradas) jugador }
+precioPropiedad :: Propiedad->Int
+precioPropiedad (_,precio) = precio
 
-esBarata :: Propiedad -> Int
-esBarata propiedad 
-    | snd propiedad < 150 = 10
+cobrarAlquileres :: Accion
+cobrarAlquileres jugador = modificarDinero ((sum.(map alquilerPropiedad).propiedadesCompradas) jugador) jugador
+
+alquilerPropiedad :: Propiedad -> Int
+alquilerPropiedad propiedad 
+    | precioPropiedad propiedad < 150 = 10
     | otherwise = 20
 
-pagarAccionistas :: Acciones 
+pagarAccionistas :: Accion
 pagarAccionistas jugador
-    | tacticaDeJuego jugador == "Accionista" = jugador { cantidadDeDinero = cantidadDeDinero jugador + 200 }
-    | otherwise = jugador { cantidadDeDinero = cantidadDeDinero jugador - 100 }
+    | tacticaDeJuego jugador == "Accionista" = modificarDinero 200 jugador 
+    | otherwise = modificarDinero (-100) jugador 
+
+
+
+
+
+
+
+
+
