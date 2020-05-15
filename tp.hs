@@ -38,6 +38,9 @@ gritar jugador = jugador{ nombre = "AHHHH"++ nombre jugador}
 puedeGanarSubasta :: Jugador -> Bool
 puedeGanarSubasta jugador = (tacticaDeJuego jugador) == "oferente singular" || (tacticaDeJuego jugador)== "accionista"
 
+
+
+
 subastar :: Propiedad->Accion
 subastar propiedad jugador |puedeGanarSubasta jugador = modificarDinero (-precioPropiedad propiedad) jugador{ propiedadesCompradas = propiedadesCompradas jugador ++ [propiedad] }
                            |otherwise = jugador
@@ -59,11 +62,19 @@ pagarAccionistas jugador
     | tacticaDeJuego jugador == "Accionista" = modificarDinero 200 jugador 
     | otherwise = modificarDinero (-100) jugador 
 
+hacerBerrinchepor ::Propiedad->Accion
+hacerBerrinchepor propiedad jugador | precioPropiedad propiedad > cantidadDeDinero jugador = hacerBerrinchepor propiedad ((gritar.(modificarDinero 10)) jugador)
+                                    | otherwise = jugador{ propiedadesCompradas = propiedadesCompradas jugador ++ [propiedad] }
 
+ultimaRonda :: Jugador->Accion
+ultimaRonda jugador = foldl1 (.) (accionsARealizar jugador) 
 
+juegoFinal :: Jugador->Jugador->Jugador
+juegoFinal jugador1 jugador2 | dineroFinal jugador1 > dineroFinal jugador2= jugador1
+                             | otherwise =jugador2
 
+dineroFinal :: Jugador->Int
+dineroFinal jugador= (cantidadDeDinero.jugarUltimaRonda) jugador
 
-
-
-
-
+jugarUltimaRonda :: Accion
+jugarUltimaRonda jugador = (ultimaRonda jugador) jugador
